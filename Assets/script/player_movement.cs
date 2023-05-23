@@ -9,6 +9,7 @@ public class player_movement : MonoBehaviour
     public float speed = 10f;
     public float maxspeed = 10f;
     public float jump_force = 500;
+    public float jump_x = 0.4f;
     Rigidbody2D player;
     SpriteRenderer player_sprite;
     Animator playeranimator;
@@ -16,6 +17,7 @@ public class player_movement : MonoBehaviour
     public int mutekitime = 2;
     public float loop_interval = 0.2f;
     bool muteki = false;
+    public bool ground;
     float footpos;
     //public bool touch_ground = true;
     float scale;
@@ -39,7 +41,7 @@ public class player_movement : MonoBehaviour
     void Update()
     {
         
-        bool ground = player.IsTouching(filter2d);
+         ground = player.IsTouching(filter2d);
         playeranimator.SetBool("is_ground",ground);
         float yoko = Input.GetAxisRaw("Horizontal");
         if (ground && yoko == 0)
@@ -50,10 +52,10 @@ public class player_movement : MonoBehaviour
 
         if (ground)
         {
-            player.AddForce(new Vector2(yoko, 0) * speed*Time.deltaTime*1000);
+            player.AddForce(new Vector2(yoko, -0.2f) * speed*Time.deltaTime*1000);
         } else
         {
-            player.AddForce(new Vector2(yoko, 0) * speed*0.1f*Time.deltaTime*1000);
+            player.AddForce(new Vector2(yoko, 0) * speed*0.05f*Time.deltaTime*1000);
         }
        
 
@@ -75,6 +77,7 @@ public class player_movement : MonoBehaviour
         {
              Debug.Log("Jump");
             playeranimator.SetTrigger("jump");
+            player.velocity = new Vector2(player.velocity.x * jump_x, player.velocity.y);
             player.AddForce(new Vector2(0, 1) * jump_force);
             
         }
