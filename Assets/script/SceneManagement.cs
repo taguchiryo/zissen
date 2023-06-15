@@ -86,6 +86,6 @@ public class SceneManagement : MonoBehaviour
     IEnumerator restart()
     {
         yield return new WaitForSeconds(3);
-        SceneManager.LoadScene("Stage 1");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

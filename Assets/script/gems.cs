@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class gems : MonoBehaviour
 {
+
+   public bool check;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,8 +22,16 @@ public class gems : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            SceneManagement._instance.AddGens();
-            Destroy(this.gameObject);
+            if (check)
+            {
+                SlopeSceneManager._instance.AddGens();
+                Destroy(gameObject);
+            }
+            else
+            {
+                SceneManagement._instance.AddGens();
+                Destroy(this.gameObject);
+            }
         }
     }
 }

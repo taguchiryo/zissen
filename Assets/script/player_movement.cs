@@ -1,6 +1,7 @@
 using Mono.Cecil;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,17 +13,30 @@ public class player_movement : MonoBehaviour
     public float jump_x = 0.4f;
     Rigidbody2D player;
     SpriteRenderer player_sprite;
+    public SpriteRenderer getSpriteRenderer { get { return player_sprite; } }
     Animator playeranimator;
+    Collider2D collder;
     public int hp = 2;
     public int mutekitime = 2;
     public float loop_interval = 0.2f;
     bool muteki = false;
     public bool ground;
+    bool Isladderrange;
+    public bool getIsladderrange { get { return Isladderrange; } }
+    bool climb;
+    public bool Climb { set { climb = value; } get { return climb; } }
+
     float footpos;
+    public float Getfootpos { get { return footpos; } }
+    float headpos;
+    public float Getheadpos { get { return headpos; } }
+
+    float centertofoot;
+    public float GetCenterfoot { get { return centertofoot; } }
     //public bool touch_ground = true;
     float scale;
     [SerializeField] private ContactFilter2D filter2d = default;
-    
+
 
     // Start is called before the first frame update
     void Start()
@@ -30,10 +44,11 @@ public class player_movement : MonoBehaviour
         player = this.gameObject.GetComponent<Rigidbody2D>();
         player_sprite = this.gameObject.GetComponent<SpriteRenderer>();
         playeranimator = GetComponent<Animator>();
+        collder = GetComponent<Collider2D>();
         scale = transform.localScale.y;
-        Debug.Log(footpos);
         //var text = Resources.Load("Hello") as TextAsset;
         // Debug.Log(text);
+        centertofoot = player_sprite.bounds.size.y / 2;
         
     }
 
@@ -41,25 +56,59 @@ public class player_movement : MonoBehaviour
     void Update()
     {
         
-         ground = player.IsTouching(filter2d);
-        playeranimator.SetBool("is_ground",ground);
+        ground = player.IsTouching(filter2d);
+        playeranimator.SetBool("is_ground", ground);
         float yoko = Input.GetAxisRaw("Horizontal");
+        bool tate = Input.GetKeyDown(KeyCode.W) | Input.GetKeyDown(KeyCode.UpArrow);
+        
+        footpos = player_sprite.bounds.min.y;
+        headpos = player_sprite.bounds.max.y;
+
+
         if (ground && yoko == 0)
         {
             player.velocity = new Vector2(0, player.velocity.y);
-            
+
         }
 
+        if (!climb)
+        {
+            moveX(yoko);
+        }
+
+
+        if (!Isladderrange)
+        {
+
+            if (tate && ground)
+            {
+
+                Jump(jump_force);
+
+            }
+
+            if (Mathf.Abs(player.velocity.x) > maxspeed)
+            {
+                player.velocity = player.velocity.x >= 0 ? new Vector2(maxspeed, player.velocity.y) : new Vector2(-maxspeed, player.velocity.y);
+            }
+
+        }
+
+
+
+    }
+
+
+    private void moveX(float yoko)
+    {
         if (ground)
         {
-            player.AddForce(new Vector2(yoko, -0.2f) * speed*Time.deltaTime*1000);
-        } else
-        {
-            player.AddForce(new Vector2(yoko, 0) * speed*0.05f*Time.deltaTime*1000);
+            player.AddForce(new Vector2(yoko, -0.2f) * speed * Time.deltaTime * 1000);
         }
-       
-
-
+        else
+        {
+            player.AddForce(new Vector2(yoko, 0) * speed * 0.05f * Time.deltaTime * 1000);
+        }
 
 
         if (yoko != 0)
@@ -71,24 +120,14 @@ public class player_movement : MonoBehaviour
         {
             playeranimator.SetBool("is_running", false);
         }
-       
-
-        if (Input.GetKeyDown(KeyCode.UpArrow) && ground)
-        {
-             Debug.Log("Jump");
-            playeranimator.SetTrigger("jump");
-            player.velocity = new Vector2(player.velocity.x * jump_x, player.velocity.y);
-            player.AddForce(new Vector2(0, 1) * jump_force);
-            
-        }
-      
-        if (Mathf.Abs(player.velocity.x) > maxspeed)
-        {
-            player.velocity = player.velocity.x >= 0 ? new Vector2(maxspeed, player.velocity.y) : new Vector2(-maxspeed, player.velocity.y);
-        }
-
     }
 
+    void Jump(float jumpforce)
+    {
+        playeranimator.SetTrigger("jump");
+        player.velocity = new Vector2(player.velocity.x * jump_x, player.velocity.y);
+        player.AddForce(new Vector2(0, 1) * jumpforce);
+    }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -99,6 +138,35 @@ public class player_movement : MonoBehaviour
     }
 
 
+    public void freezY()
+    {
+        player.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+    }
+    public void FalsefreezY()
+    {
+        player.constraints = RigidbodyConstraints2D.None;
+        player.freezeRotation = true;
+    }
+
+    public void EnableCollider(bool bol)
+    {
+        collder.enabled = bol;
+    }
+
+    public void ClimbAnimation()
+    {
+        playeranimator.Play("Climb");
+    }
+
+    public void IdleAnimation()
+    {
+        playeranimator.Play("Idle-Animation");
+    }
+    public void AnimationSpeed(float time)
+    {
+        playeranimator.speed = time;
+    }
+
     private void OnTriggerStay2D(Collider2D collision)
     {
         
@@ -106,11 +174,16 @@ public class player_movement : MonoBehaviour
         if (collision.gameObject.CompareTag("enemy"))
         {
             var enemydata = collision.gameObject.GetComponent<enemy_move>();
-            footpos = player_sprite.bounds.min.y;
+            footpos = transform.position.y - centertofoot;
+            headpos = player_sprite.bounds.max.y;
 
-           
-            if (footpos  > enemydata.Headpos && !enemydata.muteki && !muteki)
+          //  Debug.Log("enemy; " + enemydata.transform.position.y + "player" + footpos);
+
+            if (footpos + 0.4f > enemydata.transform.position.y && !enemydata.muteki && !muteki)
+            {
                 enemydata.hitdamage();
+                Jump(jump_force*1.5f);
+            }
             else if (!muteki && !enemydata.muteki)
             {
                 damaged();
@@ -137,6 +210,23 @@ public class player_movement : MonoBehaviour
         { 
            hp = 0;
             
+        }
+
+        if (collision.gameObject.CompareTag("ladder"))
+        {
+            Isladderrange = true;
+            collision.GetComponent<ladder>().SetPlayerInRange = true;
+
+        }
+    }
+
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("ladder"))
+        {
+            Isladderrange = false;
+            collision.GetComponent<ladder>().SetPlayerInRange = false;
         }
     }
 

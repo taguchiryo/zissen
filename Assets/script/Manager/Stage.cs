@@ -2,15 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NewBehaviourScript : MonoBehaviour
+public class Stage : MonoBehaviour
 {
     // Start is called before the first frame update
+    public int num_enemies; 
+    public List<enemy> enemies;
+
     void Start()
     {
-      foreach(Rigidbody2D rig in GetComponentsInChildren<Rigidbody2D>())
-        {
-            Debug.Log(rig.gameObject.name);
-        }
+        
     }
 
     // Update is called once per frame

@@ -9,6 +9,7 @@ TagManager:
   - goal
   - enemy
   - ground
+  - ladder
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - Water
   - UI
   - ground
-  - 
+  - Slope
   - 
   - 
   - 
@@ -45,4 +46,7 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Character
+    uniqueID: 1829792625
     locked: 0

@@ -22,7 +22,7 @@ public class goal : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            Destroy(collision.gameObject);
+            Destroy(collision.gameObject);   
             Scene stage = SceneManager.GetActiveScene();
 
             
@@ -36,7 +36,7 @@ public class goal : MonoBehaviour
     IEnumerator nextStage()
     {
         yield return new WaitForSeconds(3);
-        SceneManager.LoadScene("Stage 2");
+        SceneManager.LoadScene("SelectScene");
     }
 
 }
